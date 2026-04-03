@@ -133,7 +133,26 @@
                 "isolation": {"type": "string", "description": "Container isolation technology to use for the build process."},
                 "privileged": {"type": ["boolean", "string"], "description": "Give extended privileges to the build container."},
                 "secrets": {"$ref": "#/definitions/service_config_or_secret", "description": "Secrets to expose to the build. These are accessible at build-time."},
-                "tags": {"type": "array", "items": {"type": "string"}, "description": "Additional tags to apply to the built image."},
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {"type": "string", "description": "Short syntax: image reference as a string."},
+                      {
+                        "type": "object",
+                        "description": "Long syntax: image reference as separate components.",
+                        "properties": {
+                          "name": {"type": "string", "description": "Image name (registry/repository)."},
+                          "tag": {"type": "string", "description": "Image tag."},
+                          "digest": {"type": "string", "description": "Image digest (sha256:...)."}
+                        },
+                        "required": ["name"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "description": "Additional tags to apply to the built image."
+                },
                 "ulimits": {"$ref": "#/definitions/ulimits", "description": "Override the default ulimits for the build container."},
                 "platforms": {"type": "array", "items": {"type": "string"}, "description": "Platforms to build for, e.g., 'linux/amd64', 'linux/arm64', or 'windows/amd64'."}
               },
@@ -458,8 +477,24 @@
           "description": "Define a custom hostname for the service container."
         },
         "image": {
-          "type": "string",
-          "description": "Specify the image to start the container from. Can be a repository/tag, a digest, or a local image ID."
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Short syntax: image reference as a string."
+            },
+            {
+              "type": "object",
+              "description": "Long syntax: image reference as separate components.",
+              "properties": {
+                "name": {"type": "string", "description": "Image name (registry/repository)."},
+                "tag": {"type": "string", "description": "Image tag."},
+                "digest": {"type": "string", "description": "Image digest (sha256:...)."}
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Specify the image to start the container from. Can be a string or a map with name/tag/digest fields."
         },
         "init": {
           "type": ["boolean", "string"],

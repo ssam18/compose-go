@@ -45,6 +45,8 @@ func init() {
 	transformers["services.*.devices.*"] = transformDeviceMapping
 	transformers["services.*.secrets.*"] = transformFileMount
 	transformers["services.*.configs.*"] = transformFileMount
+	transformers["services.*.image"] = transformImage
+	transformers["services.*.build.tags"] = transformBuildTags
 	transformers["services.*.ports"] = transformPorts
 	transformers["services.*.build"] = transformBuild
 	transformers["services.*.build.ssh"] = transformSSH

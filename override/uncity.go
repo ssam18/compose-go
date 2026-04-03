@@ -37,7 +37,7 @@ func init() {
 	unique["services.*.build.args"] = keyValueIndexer
 	unique["services.*.build.additional_contexts"] = keyValueIndexer
 	unique["services.*.build.platform"] = keyValueIndexer
-	unique["services.*.build.tags"] = keyValueIndexer
+	unique["services.*.build.tags"] = tagIndexer
 	unique["services.*.build.labels"] = keyValueIndexer
 	unique["services.*.cap_add"] = keyValueIndexer
 	unique["services.*.cap_drop"] = keyValueIndexer
@@ -105,6 +105,30 @@ func enforceUnicity(value any, p tree.Path) (any, error) {
 		}
 	}
 	return value, nil
+}
+
+// tagIndexer returns an index key for a build tag entry.
+// It supports both the short syntax (a plain string) and the long syntax
+// ({name: "repo", tag: "version", digest: "sha256:..."}).
+func tagIndexer(v any, p tree.Path) (string, error) {
+	switch value := v.(type) {
+	case string:
+		return value, nil
+	case map[string]any:
+		name, _ := value["name"].(string)
+		if name == "" {
+			return "", fmt.Errorf("%s: image long syntax requires a non-empty 'name' field", p)
+		}
+		if digest, ok := value["digest"].(string); ok && digest != "" {
+			return name + "@" + digest, nil
+		}
+		if tag, ok := value["tag"].(string); ok && tag != "" {
+			return name + ":" + tag, nil
+		}
+		return name, nil
+	default:
+		return "", fmt.Errorf("%s: unexpected type %T", p, v)
+	}
 }
 
 func keyValueIndexer(v any, p tree.Path) (string, error) {
